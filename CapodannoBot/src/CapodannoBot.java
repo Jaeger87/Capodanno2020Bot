@@ -22,8 +22,9 @@ public class CapodannoBot extends Bot {
     private Stack<User> turnoCorrente;
     private Stack<Penance> penitenzeToDoIt;
 
-    private long chat_id = -318728780;
+    private long chat_id = -1001477444974L;
 
+    private List<String> insulti;
 
     private HashMap<Penance, Long> currentTimePenalties;
 
@@ -32,16 +33,29 @@ public class CapodannoBot extends Bot {
         random = new Random();
         chatMembers = new HashMap<>();
         penances = new ArrayList<>();
+        insulti = new ArrayList<>();
         currentTimePenalties = new HashMap<>();
 
         String penancesFilePath = new File("").getAbsolutePath() + System.getProperty("file.separator");
-        File tokenFile = new File(penancesFilePath + "penances.txt");
-        try (Scanner s = new Scanner(tokenFile))
+        File penancesFile = new File(penancesFilePath + "penances.txt");
+        try (Scanner s = new Scanner(penancesFile))
         {
             while (s.hasNext())
             {
                 String[] parsed = s.nextLine().split("\t");
                 penances.add(new Penance(parsed[0], Integer.valueOf(parsed[1])));
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+        File insultiFile = new File(penancesFilePath + "insulti.txt");
+        try (Scanner s = new Scanner(insultiFile))
+        {
+            while (s.hasNext())
+            {
+                insulti.add(s.nextLine());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -97,7 +111,7 @@ public class CapodannoBot extends Bot {
 
         if(text.startsWith("/")) //Arrivato un comando
         {
-            if (text.endsWith("@JaegerTestbot"))
+            if (text.endsWith("@andra_tutto_bene_bot"))
                 text = text.substring(0, text.indexOf('@'));
             Comando c = Comando.fromString(text);
             MessageToSend mts = null;
@@ -135,6 +149,20 @@ public class CapodannoBot extends Bot {
                     mts = new MessageToSend(message.getChat().getId(), "Ok, il gioco per te finisce caro/a/i " + u.getUserName() != null ? u.getUserName() : u.getFirstName() + ". Non verrai più preso/a/i in considerazione per i prossimi turni.");
                     sendMessage(mts);
                     break;
+                case INSULTA:
+                    int size = chatMembers.size();
+                    int item = random.nextInt(size); // In real life, the Random object should be rather more shared than this
+                    int i = 0;
+                    int insultoIndex = random.nextInt(insulti.size());
+                    for(User memberToInsult : chatMembers.keySet())
+                    {
+                        if (i == item) {
+                            sendMessage(new MessageToSend(chat_id, getNameUsername(memberToInsult) + " " + insulti.get(insultoIndex)));
+                            break;
+                        }
+                        i++;
+                    }
+                    break;
                 case ERRORE:
 
                     break;
@@ -164,6 +192,8 @@ public class CapodannoBot extends Bot {
     private void updateAdmins()
     {
         List<ChatMember> adminsList = getChatAdministrators(new ChatRequests(chat_id));
+        if(adminsList == null)
+            return;
         admins.addAll(adminsList.stream().map(m -> m.getUser()).collect(Collectors.toList()));
     }
 

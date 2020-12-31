@@ -85,5 +85,6 @@ Gara di tiro a segno: Ognuno lancia una freccietta al bersaglio, il punteggio mi
 Modalità risparmio energetico: Tutti i giocatori inviano uno screen del proprio telefono, il giocatore con meno batteria dovrà comportarsi in modalità "risparmio energetico" per i prossimi 5 minuti.	5
 Disegnate tutti un unicorno dove volete (carta, paint, tela etc..) Il più bel unicorno fa vincere un sorso al vincitore. ATTENZIONE, avete solo 3 minuti di tempo per disegnare, allo scadere chi non avrà inviato il proprio unicorno riceverà la prossima punzione di un altro giocatore	3
 Di il nome di un film. Se tutti l'hanno visto tutti bevono un sorso, se l'hanno visto solo alcuni ottienete tutti 2 sorsi. Se l'hai visto solo tu otteni 5 sorsi e la prossima punizione.	-1
-Resta con la lingua di fuori per i prossimi 5 minuti	5
-MANI IN ALTO, QUESTA È UNA RAPINA... Resta per i prossimi 5 minuti con le braccia alzate (puoi abbassarle soltanto per motivi riguardanti il gioco)	5
+Resta con la lingua di fuori per i prossimi 3 minuti	3
+MANI IN ALTO, QUESTA È UNA RAPINA... Resta per i prossimi 3 minuti con le braccia alzate (puoi abbassarle soltanto per motivi riguardanti il gioco)	3
+Disegnati uno smile in fronte.	-1

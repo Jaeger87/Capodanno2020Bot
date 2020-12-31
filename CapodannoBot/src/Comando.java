@@ -1,6 +1,6 @@
 public enum Comando {
 
-    NEXT("/next"), RITIRO("/miritiro"), NEWTURN("/newturn"), UPDATEADMINS("/updateadmins"), ERRORE("");
+    NEXT("/next"), RITIRO("/miritiro"), NEWTURN("/newturn"), UPDATEADMINS("/updateadmins"), INSULTA("/insulta"), ERRORE("");
 
 
     private String str;
