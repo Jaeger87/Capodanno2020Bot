@@ -1,4 +1,5 @@
 import com.botticelli.bot.Bot;
+import com.botticelli.bot.request.methods.ChatRequests;
 import com.botticelli.bot.request.methods.MessageToSend;
 import com.botticelli.bot.request.methods.types.*;
 
@@ -6,10 +7,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CapodannoBot extends Bot {
 
 
+    private Set<User> admins;
     private List<Penance> penances;
     private HashMap<User, Boolean> chatMembers;
     private Random random;
@@ -53,21 +57,39 @@ public class CapodannoBot extends Bot {
         tastiera.setResizeKeyboard(true);
 
         penitenzeToDoIt = new Stack<>();
-
+        turnoCorrente = new Stack<>();
         resetPenitenzeToDoIt();
+
+        admins = new HashSet<>();
+        updateAdmins();
     }
 
 
     private void resetPenitenzeToDoIt()
     {
         penitenzeToDoIt.addAll(penances);
-
         Collections.shuffle(penitenzeToDoIt);
+    }
+
+    private void startTurn()
+    {
+        List<User> utentiAttivi = chatMembers.keySet().stream().filter(k->chatMembers.get(k)).collect(Collectors.toList());
+        turnoCorrente.addAll(utentiAttivi);
+        Collections.shuffle(turnoCorrente);
+    }
+
+
+    private String getNameUsername(User u)
+    {
+        return u.getUserName() != null ? "@" + u.getUserName() : u.getFirstName();
     }
 
     @Override
     public void textMessage(Message message) {
+        if(message.getChat().getId() != chat_id)
+            return;
         User u = message.getFrom();
+
         if(!chatMembers.containsKey(u))
             chatMembers.put(message.getFrom(), true);
 
@@ -75,14 +97,27 @@ public class CapodannoBot extends Bot {
 
         if(text.startsWith("/")) //Arrivato un comando
         {
+            if (text.endsWith("@JaegerTestbot"))
+                text = text.substring(0, text.indexOf('@'));
             Comando c = Comando.fromString(text);
             MessageToSend mts = null;
             switch (c) {
                 case NEXT:
+                    if(!admins.contains(u))
+                    {
+                        sendMessage(new MessageToSend(message.getChat().getId(), "Solo gli admin possono scorrere le penitenze"));
+                        return;
+                    }
+                    if(turnoCorrente.isEmpty())
+                    {
+                        sendMessage(new MessageToSend(message.getChat().getId(), "Il turno non è stato inizializzato, usare il comando /newturn"));
+                        return;
+                    }
                     if(penitenzeToDoIt.isEmpty())
                         resetPenitenzeToDoIt();
                     Penance p = penitenzeToDoIt.pop();
-                    mts = new MessageToSend(message.getChat().getId(), p.getText());
+                    User userTopunish = turnoCorrente.pop();
+                    mts = new MessageToSend(message.getChat().getId(), getNameUsername(userTopunish) + "\n\n" + p.getText());
                     mts.setReplyMarkup(tastiera);
                     sendMessage(mts);
 
@@ -96,10 +131,19 @@ public class CapodannoBot extends Bot {
                     sendMessage(mts);
                     break;
                 case ERRORE:
-                    break;
-                case NEWTURN:
 
                     break;
+                case NEWTURN:
+                    if(!admins.contains(u))
+                    {
+                        sendMessage(new MessageToSend(message.getChat().getId(), "Solo gli admin possono iniziare nuovi turni."));
+                        return;
+                    }
+                    startTurn();
+                    sendMessage(new MessageToSend(message.getChat().getId(), "Che un nuovo turno abbia inizio \uD83D\uDE08\uD83D\uDE08\uD83D\uDE08, gli admin possono usare da ora il comando /next per far girare le penitenze."));
+                    break;
+                case UPDATEADMINS:
+                    updateAdmins();
                 default:
                     break;
             }
@@ -111,6 +155,11 @@ public class CapodannoBot extends Bot {
 
 
 
+    private void updateAdmins()
+    {
+        List<ChatMember> adminsList = getChatAdministrators(new ChatRequests(chat_id));
+        admins.addAll(adminsList.stream().map(m -> m.getUser()).collect(Collectors.toList()));
+    }
 
 
     @Override
@@ -170,6 +219,8 @@ public class CapodannoBot extends Bot {
 
     @Override
     public void newChatMembersMessage(Message message) {
+        if(message.getChat().getId() != chat_id)
+            return;
         for(User u : message.getNewChatMembers())
         {
             chatMembers.put(u, true);
@@ -181,6 +232,8 @@ public class CapodannoBot extends Bot {
 
     @Override
     public void leftChatMemberMessage(Message message) {
+        if(message.getChat().getId() != chat_id)
+            return;
         chatMembers.remove(message.getLeftChatMember());
         sendMessage(new MessageToSend(message.getChat().getId(), "NOOOOOOOO"));
     }
