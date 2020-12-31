@@ -1,15 +1,47 @@
 import com.botticelli.bot.Bot;
+import com.botticelli.bot.request.methods.DiceToSend;
+import com.botticelli.bot.request.methods.MessageToSend;
 import com.botticelli.bot.request.methods.types.*;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CapodannoBot extends Bot {
 
 
+    private HashMap<User, Boolean> chatMembers;
+
     public CapodannoBot(String token) {
         super(token);
+        chatMembers = new HashMap<>();
     }
 
     @Override
     public void textMessage(Message message) {
+        if(!chatMembers.containsKey(message.getFrom()))
+            chatMembers.put(message.getFrom(), true);
+
+        String text = message.getText();
+        if(text.startsWith("/")) //Arrivato un comando
+        {
+            Comando c = Comando.fromString(text);
+            switch (c) {
+                case NEXT:
+
+                    break;
+
+                case RITIRO:
+                    chatMembers.put(message.getFrom(), false);
+                    break;
+                case ERRORE:
+                    break;
+                default:
+                    break;
+            }
+
+            return;
+        }
 
     }
 
@@ -44,6 +76,11 @@ public class CapodannoBot extends Bot {
     }
 
     @Override
+    public void diceMessage(Message message) {
+
+    }
+
+    @Override
     public void contactMessage(Message message) {
 
     }
@@ -65,12 +102,17 @@ public class CapodannoBot extends Bot {
 
     @Override
     public void newChatMembersMessage(Message message) {
-
+        for(User u : message.getNewChatMembers())
+        {
+            chatMembers.put(u, true);
+            sendMessage(new MessageToSend(message.getChat().getId(), "Benvenuto/a/i " + u.getUserName() != null ? u.getUserName() : u.getFirstName() + " "));
+        }
     }
 
     @Override
     public void leftChatMemberMessage(Message message) {
-
+        chatMembers.remove(message.getLeftChatMember());
+        sendMessage(new MessageToSend(message.getChat().getId(), "NOOOOOOOO"));
     }
 
     @Override

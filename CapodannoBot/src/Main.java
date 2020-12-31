@@ -23,22 +23,14 @@ public class Main {
                 token = s.nextLine();
             }
         }
-        //Bot bot = new botbase.BotBase(token);
-        //Bot bot = new randommedia.RandomMediaBot(token);
-        //Bot bot = new botspesa.BotSpesa(token);
-        //Bot bot = new questionario.QuestionarioBot(token);
-        //Bot bot = new PrimoBot(token);
-        //Bot bot = new cartamorra.CartaMorraBot(token);
-        //Bot bot = new figucciamorra.BotMorraCinese(token);
-        //Bot bot = new TicTacToeBot(token);
-
-
-       // MessageReceiver mr = new MessageReceiver(bot, 500, 1);
+        Bot bot = new CapodannoBot(token);
 
 
 
-        //mr.ignoreEditedMessages();
-        //mr.start();
+        MessageReceiver mr = new MessageReceiver(bot, 250, 4);
+
+        mr.ignoreEditedMessages();
+        mr.start();
 
     }
 }
