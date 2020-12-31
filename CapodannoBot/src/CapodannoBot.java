@@ -3,18 +3,35 @@ import com.botticelli.bot.request.methods.DiceToSend;
 import com.botticelli.bot.request.methods.MessageToSend;
 import com.botticelli.bot.request.methods.types.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
+import java.util.Random;
 
 public class CapodannoBot extends Bot {
 
 
+    private List<String> penances;
     private HashMap<User, Boolean> chatMembers;
+    private Random random;
 
     public CapodannoBot(String token) {
         super(token);
+        random = new Random();
         chatMembers = new HashMap<>();
+        penances = new ArrayList<>();
+
+        String penancesFilePath = new File("").getAbsolutePath() + System.getProperty("file.separator");
+        File tokenFile = new File(penancesFilePath + "penances.txt");
+        try (Scanner s = new Scanner(tokenFile))
+        {
+            while (s.hasNext())
+            {
+                penances.add(s.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -28,13 +45,15 @@ public class CapodannoBot extends Bot {
             Comando c = Comando.fromString(text);
             switch (c) {
                 case NEXT:
-
+                    sendMessage(new MessageToSend(message.getChat().getId(), penances.get(random.nextInt(penances.size()))));
                     break;
 
                 case RITIRO:
                     chatMembers.put(message.getFrom(), false);
                     break;
                 case ERRORE:
+                    break;
+                case NEWTURN:
                     break;
                 default:
                     break;
