@@ -1,5 +1,4 @@
 import com.botticelli.bot.Bot;
-import com.botticelli.bot.request.methods.DiceToSend;
 import com.botticelli.bot.request.methods.MessageToSend;
 import com.botticelli.bot.request.methods.types.*;
 
@@ -11,15 +10,25 @@ import java.util.Random;
 public class CapodannoBot extends Bot {
 
 
-    private List<String> penances;
+    private List<Penance> penances;
     private HashMap<User, Boolean> chatMembers;
     private Random random;
+    private ReplyKeyboardMarkupWithButtons tastiera;
+
+    private Stack<User> turnoCorrente;
+    private Stack<Penance> penitenzeToDoIt;
+
+    private long chat_id = -318728780;
+
+
+    private HashMap<Penance, Long> currentTimePenalties;
 
     public CapodannoBot(String token) {
         super(token);
         random = new Random();
         chatMembers = new HashMap<>();
         penances = new ArrayList<>();
+        currentTimePenalties = new HashMap<>();
 
         String penancesFilePath = new File("").getAbsolutePath() + System.getProperty("file.separator");
         File tokenFile = new File(penancesFilePath + "penances.txt");
@@ -27,33 +36,69 @@ public class CapodannoBot extends Bot {
         {
             while (s.hasNext())
             {
-                penances.add(s.nextLine());
+                String[] parsed = s.nextLine().split("\t");
+                penances.add(new Penance(parsed[0], Integer.valueOf(parsed[1])));
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+        List<List<KeyboardButton>> keyboard = new ArrayList<>();
+        List<KeyboardButton> line = new ArrayList<>();
+        line.add(new KeyboardButton("\uD83C\uDFB2"));
+        line.add(new KeyboardButton("\uD83C\uDFAF"));
+        line.add(new KeyboardButton("⚽️"));
+        keyboard.add(line);
+        tastiera = new ReplyKeyboardMarkupWithButtons(keyboard);
+        tastiera.setResizeKeyboard(true);
+
+        penitenzeToDoIt = new Stack<>();
+
+        resetPenitenzeToDoIt();
+    }
+
+
+    private void resetPenitenzeToDoIt()
+    {
+        penitenzeToDoIt.addAll(penances);
+
+        Collections.shuffle(penitenzeToDoIt);
     }
 
     @Override
     public void textMessage(Message message) {
-        if(!chatMembers.containsKey(message.getFrom()))
+        User u = message.getFrom();
+        if(!chatMembers.containsKey(u))
             chatMembers.put(message.getFrom(), true);
 
         String text = message.getText();
+
         if(text.startsWith("/")) //Arrivato un comando
         {
             Comando c = Comando.fromString(text);
+            MessageToSend mts = null;
             switch (c) {
                 case NEXT:
-                    sendMessage(new MessageToSend(message.getChat().getId(), penances.get(random.nextInt(penances.size()))));
+                    if(penitenzeToDoIt.isEmpty())
+                        resetPenitenzeToDoIt();
+                    Penance p = penitenzeToDoIt.pop();
+                    mts = new MessageToSend(message.getChat().getId(), p.getText());
+                    mts.setReplyMarkup(tastiera);
+                    sendMessage(mts);
+
+                    if(p.getDuration() > -1)
+                        currentTimePenalties.put(p, System.currentTimeMillis() + 1000 * 60 * p.getDuration());
                     break;
 
                 case RITIRO:
                     chatMembers.put(message.getFrom(), false);
+                    mts = new MessageToSend(message.getChat().getId(), "Ok, il gioco per te finisce caro/a/i " + u.getUserName() != null ? u.getUserName() : u.getFirstName() + ". Non verrai più preso/a/i in considerazione per i prossimi turni.");
+                    sendMessage(mts);
                     break;
                 case ERRORE:
                     break;
                 case NEWTURN:
+
                     break;
                 default:
                     break;
@@ -63,6 +108,10 @@ public class CapodannoBot extends Bot {
         }
 
     }
+
+
+
+
 
     @Override
     public void audioMessage(Message message) {
@@ -124,7 +173,9 @@ public class CapodannoBot extends Bot {
         for(User u : message.getNewChatMembers())
         {
             chatMembers.put(u, true);
-            sendMessage(new MessageToSend(message.getChat().getId(), "Benvenuto/a/i " + u.getUserName() != null ? u.getUserName() : u.getFirstName() + " "));
+            MessageToSend mts = new MessageToSend(message.getChat().getId(), "Benvenuto/a/i " + u.getUserName() != null ? u.getUserName() : u.getFirstName() + " ");
+            mts.setReplyMarkup(tastiera);
+            sendMessage(mts);
         }
     }
 
@@ -206,6 +257,20 @@ public class CapodannoBot extends Bot {
 
     @Override
     public void routine() {
+        if (currentTimePenalties.isEmpty())
+            return;
 
+        List<Penance> keyToremove = new ArrayList<>();
+
+        for(Penance p : currentTimePenalties.keySet())
+        {
+            if(currentTimePenalties.get(p) < System.currentTimeMillis()) {
+                keyToremove.add(p);
+                sendMessage(new MessageToSend(chat_id, p.getTextWithScadenza()));
+            }
+        }
+
+        for(Penance p : keyToremove)
+            currentTimePenalties.remove(p);
     }
 }
