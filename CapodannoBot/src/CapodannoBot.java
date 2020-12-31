@@ -121,6 +121,11 @@ public class CapodannoBot extends Bot {
                     mts.setReplyMarkup(tastiera);
                     sendMessage(mts);
 
+                    if(turnoCorrente.isEmpty())
+                    {
+                        sendMessage(new MessageToSend(message.getChat().getId(), "E con questa il turno si conclude! ricordate di fare /newturn se volete continuare a perdere la dignità.."));
+                    }
+
                     if(p.getDuration() > -1)
                         currentTimePenalties.put(p, System.currentTimeMillis() + 1000 * 60 * p.getDuration());
                     break;
@@ -144,6 +149,7 @@ public class CapodannoBot extends Bot {
                     break;
                 case UPDATEADMINS:
                     updateAdmins();
+                    sendMessage(new MessageToSend(message.getChat().getId(), "Lista admins aggiornata."));
                 default:
                     break;
             }
